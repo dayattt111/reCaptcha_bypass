@@ -1,187 +1,265 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Demo Form dengan CAPTCHA</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Demo CAPTCHA Checkbox</title>
   <style>
-    :root{--bg:#f4f6f8;--card:#ffffff;--accent:#2563eb;--muted:#6b7280}
+    :root{--bg:#f6f7fb;--card:#fff;--accent:#1f7ed0;--muted:#6b7280}
     *{box-sizing:border-box}
-    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:0; padding:40px; color:#111}
-    .wrap{max-width:520px;margin:0 auto}
-    .card{background:var(--card);padding:24px;border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
-    h1{font-size:20px;margin:0 0 12px}
-    p.lead{margin:0 0 18px;color:var(--muted)}
-
-    form .field{margin-bottom:14px}
-    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
-    input[type="text"], input[type="email"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6e9ef;font-size:14px}
-
-    .captcha-row{display:flex;gap:12px;align-items:center}
-    canvas#captchaCanvas{border-radius:8px;border:1px solid #e6e9ef;background:#fff}
-    .small{font-size:13px;color:var(--muted)}
-
-    .controls{display:flex;gap:8px}
-    button{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:8px;cursor:pointer}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial; background:var(--bg); padding:36px; color:#111}
+    .wrap{max-width:560px;margin:0 auto}
+    .card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    h1{margin:0 0 8px;font-size:18px}
+    p.lead{margin:0 0 14px;color:var(--muted)}
+    .captcha-row{display:flex;align-items:center;gap:12px}
+    .box{
+      width:28px;height:28px;border-radius:6px;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;background:#fff; user-select:none;
+    }
+    .box[aria-checked="true"]{background:linear-gradient(180deg,var(--accent),#0b5ea8);border-color:transparent;color:white}
+    .box svg{width:18px;height:18px;opacity:0.0;transition:opacity .15s}
+    .box[aria-checked="true"] svg{opacity:1}
+    .label{font-weight:600}
+    .sub{font-size:13px;color:var(--muted);margin-top:10px}
+    .token{font-size:12px;color:#064e3b;background:#ecfdf5;padding:8px;border-radius:8px;border:1px solid #bbf7d0;margin-top:12px;display:none}
+    .challenge-modal{
+      position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      background:rgba(2,6,23,0.45);z-index:99;visibility:hidden;opacity:0;transition:opacity .15s;
+    }
+    .challenge-modal.open{visibility:visible;opacity:1}
+    .challenge-card{background:#fff;padding:18px;border-radius:10px;max-width:420px;width:92%}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
     button.ghost{background:#fff;border:1px solid #e6e9ef;color:#111}
-    .hint{font-size:12px;color:#ef4444;margin-top:6px}
-
-    .success{background:#ecfdf5;border:1px solid #bbf7d0;color:#065f46;padding:10px;border-radius:8px;margin-top:12px}
-    .error{background:#fff7f5;border:1px solid #ffccc7;color:#9b1c1c;padding:10px;border-radius:8px;margin-top:12px}
-
-    footer{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
-    @media(max-width:520px){body{padding:18px}}
+    .hint{font-size:13px;color:var(--muted)}
+    .error{color:#9b1c1c;margin-top:8px}
+    .sr-only{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>Form Pendaftaran (dengan CAPTCHA)</h1>
-      <p class="lead">Isi data lalu ketik karakter yang terlihat pada CAPTCHA. Klik "Refresh" bila sulit dibaca.</p>
+    <div class="card" role="region" aria-label="Form demo captcha">
+      <h1>Demo CAPTCHA — Checkbox</h1>
+      <p class="lead">Klik kotak di samping untuk membuktikan kamu bukan robot. Demo ini menampilkan challenge jika analisis singkat tidak yakin.</p>
 
       <form id="demoForm" autocomplete="off">
-        <div class="field">
-          <label for="name">Nama</label>
-          <input id="name" name="name" type="text" required placeholder="Masukkan nama...">
-        </div>
-
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" required placeholder="email@contoh.com">
-        </div>
-
-        <div class="field">
-          <label for="captchaInput">CAPTCHA</label>
-          <div class="captcha-row">
-            <canvas id="captchaCanvas" width="220" height="70" aria-label="CAPTCHA image"></canvas>
-            <div style="flex:1">
-              <div class="controls">
-                <button type="button" id="refreshBtn" class="ghost">Refresh</button>
-                <button type="button" id="audioBtn" class="ghost">Audio</button>
-              </div>
-              <div style="height:8px"></div>
-              <input id="captchaInput" name="captcha" type="text" placeholder="Ketik karakter di atas" required>
-              <div id="captchaHint" class="small">Case-insensitive</div>
-            </div>
+        <div class="captcha-row" style="margin-bottom:12px;">
+          <div id="captchaBox" class="box" role="checkbox" tabindex="0" aria-checked="false" aria-labelledby="captchaLabel">
+            <!-- check icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div id="captchaLabel" class="label">I'm not a robot</div>
+            <div class="hint">Jika terdeteksi suspicious, akan muncul challenge</div>
           </div>
         </div>
 
-        <div class="field">
-          <button id="submitBtn" type="submit">Kirim</button>
-          <button id="clearBtn" type="button" class="ghost">Kosongkan</button>
+        <input type="hidden" name="captcha_token" id="captchaToken" value="">
+
+        <div style="display:flex;gap:8px;">
+          <button type="submit">Kirim Form</button>
+          <button type="button" id="resetBtn" class="ghost">Reset</button>
         </div>
 
-        <div id="message" role="status" aria-live="polite"></div>
+        <div id="msg" aria-live="polite"></div>
+        <div id="tokenBox" class="token" role="status" aria-live="polite"></div>
       </form>
+    </div>
+  </div>
 
-      <footer>Demo CAPTCHA client-side — tidak untuk produksi. Untuk verifikasi aman gunakan server-side atau reCAPTCHA.</footer>
+  <!-- challenge modal -->
+  <div id="challengeModal" class="challenge-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="challenge-card" role="document">
+      <h2 style="margin:0 0 8px;font-size:16px">Verifikasi tambahan</h2>
+      <p class="hint" id="challengeText">Isi challenge...</p>
+
+      <div style="margin-top:8px;">
+        <label for="challengeInput" class="sr-only">Jawaban challenge</label>
+        <input id="challengeInput" type="text" placeholder="Ketik jawaban..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef">
+      </div>
+
+      <div class="controls">
+        <button id="checkChallenge">Periksa</button>
+        <button id="playAudio" class="ghost">Putar Audio</button>
+        <button id="closeChallenge" class="ghost">Batal</button>
+      </div>
+      <div id="challengeError" class="error" role="alert"></div>
     </div>
   </div>
 
   <script>
-    // Simple client-side CAPTCHA using Canvas
     (function(){
-      const canvas = document.getElementById('captchaCanvas');
-      const ctx = canvas.getContext('2d');
-      const refreshBtn = document.getElementById('refreshBtn');
-      const audioBtn = document.getElementById('audioBtn');
-      const input = document.getElementById('captchaInput');
+      const box = document.getElementById('captchaBox');
+      const tokenInput = document.getElementById('captchaToken');
+      const tokenBox = document.getElementById('tokenBox');
       const form = document.getElementById('demoForm');
-      const msg = document.getElementById('message');
+      const msg = document.getElementById('msg');
+      const resetBtn = document.getElementById('resetBtn');
 
-      let currentCaptcha = '';
+      // challenge modal elements
+      const modal = document.getElementById('challengeModal');
+      const challengeText = document.getElementById('challengeText');
+      const challengeInput = document.getElementById('challengeInput');
+      const checkBtn = document.getElementById('checkChallenge');
+      const playAudio = document.getElementById('playAudio');
+      const closeChallenge = document.getElementById('closeChallenge');
+      const challengeError = document.getElementById('challengeError');
 
-      function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min }
-      function pickChars(n){
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz'; // avoid ambiguous O0Il
-        let s=''; for(let i=0;i<n;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
-        return s;
+      let verified = false;
+      let currentChallenge = null;
+
+      // helper: set checked UI
+      function setChecked(yes){
+        box.setAttribute('aria-checked', yes ? 'true' : 'false');
       }
 
-      function drawCaptcha(text){
-        const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0,0,w,h);
-        // background gradient
-        const g = ctx.createLinearGradient(0,0,w,h);
-        g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#f3f4f6');
-        ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
-
-        // Add noise lines
-        for(let i=0;i<8;i++){
-          ctx.beginPath();
-          ctx.moveTo(randInt(0,w), randInt(0,h));
-          ctx.lineTo(randInt(0,w), randInt(0,h));
-          ctx.strokeStyle = `rgba(${randInt(50,120)},${randInt(50,120)},${randInt(50,120)},${(Math.random()*0.6).toFixed(2)})`;
-          ctx.lineWidth = Math.random()*1.4+0.6; ctx.stroke();
-        }
-
-        // Draw each character with random transform
-        const margin = 18; const availW = w - margin*2; const charW = availW / text.length;
-        for(let i=0;i<text.length;i++){
-          const ch = text[i];
-          const fontSize = randInt(28,40);
-          ctx.font = `${fontSize}px Arial`;
-          ctx.save();
-          const x = margin + i*charW + (charW - fontSize)/2 + randInt(-4,6);
-          const y = h/2 + randInt(6,14);
-          const angle = (Math.random()*30-15) * Math.PI/180;
-          ctx.translate(x,y); ctx.rotate(angle);
-          // slight skew via transform
-          ctx.transform(1, Math.random()*0.15-0.07, Math.random()*0.15-0.07, 1, 0, 0);
-          ctx.fillStyle = `rgba(${randInt(20,80)},${randInt(20,80)},${randInt(20,80)},1)`;
-          ctx.fillText(ch, 0, 0);
-          ctx.restore();
-        }
-
-        // dots
-        for(let i=0;i<40;i++){
-          ctx.beginPath(); ctx.arc(randInt(0,w), randInt(0,h), Math.random()*1.6, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(${randInt(80,200)},${randInt(80,200)},${randInt(80,200)},${(Math.random()*0.7).toFixed(2)})`;
-          ctx.fill();
-        }
+      // helper: create token (demo)
+      function createToken(){
+        // random token (in real: server signs token)
+        return 'tok_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
       }
 
-      function generate(){
-        currentCaptcha = pickChars(6);
-        drawCaptcha(currentCaptcha);
-        input.value = '';
-        msg.innerHTML = '';
+      // simulate analysis when checkbox clicked
+      async function performAnalysis(){
+        // small delay + loader UX
+        const prev = box.innerHTML;
+        box.innerHTML = '<svg viewBox="0 0 24 24" style="width:18px;height:18px"><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none"/></svg>';
+        // fake "analysis" time
+        await new Promise(r => setTimeout(r, 800 + Math.random()*800));
+
+        // simple probabilistic decision to require challenge
+        const pass = Math.random() > 0.35; // ~65% pass
+        box.innerHTML = prev;
+        return pass;
       }
 
-      refreshBtn.addEventListener('click', generate);
+      // generate a simple math challenge
+      function generateChallenge(){
+        const a = Math.floor(Math.random()*9)+1;
+        const b = Math.floor(Math.random()*9)+1;
+        const op = Math.random()>0.5 ? '+' : '-';
+        const question = `Berapa ${a} ${op} ${b}?`;
+        const answer = op === '+' ? a + b : a - b;
+        return {question, answer: answer.toString()};
+      }
 
-      // basic audio accessibility: speak the captcha using SpeechSynthesis
-      audioBtn.addEventListener('click', ()=>{
-        try{
-          const utter = new SpeechSynthesisUtterance(currentCaptcha.split('').join(' '));
-          utter.rate = 0.9; window.speechSynthesis.speak(utter);
-        }catch(e){ alert('Audio tidak tersedia di browser ini.'); }
+      // open modal
+      function openChallenge(){
+        currentChallenge = generateChallenge();
+        challengeText.textContent = currentChallenge.question;
+        challengeInput.value = '';
+        challengeError.textContent = '';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        challengeInput.focus();
+      }
+
+      // close modal
+      function closeModal(){
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden','true');
+      }
+
+      // audio challenge
+      playAudio.addEventListener('click', ()=>{
+        if(!('speechSynthesis' in window)) return alert('Audio tidak tersedia di browser ini.');
+        const utt = new SpeechSynthesisUtterance(challengeText.textContent);
+        utt.rate = 0.95;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utt);
       });
 
-      form.addEventListener('submit', function(e){
-        e.preventDefault();
-        const entered = input.value.trim();
-        if(!entered){ showError('Isi CAPTCHA terlebih dahulu.'); return }
-        if(entered.toLowerCase() === currentCaptcha.toLowerCase()){
-          showSuccess('Berhasil! Formulir dikirim (demo).');
-          // Simulate sending data — in produksi lakukan POST ke server
-          form.reset(); generate();
+      // checkbox interactions
+      box.addEventListener('click', async ()=>{
+        if(box.getAttribute('aria-checked') === 'true'){
+          // uncheck -> reset
+          setChecked(false);
+          verified = false;
+          tokenInput.value = '';
+          tokenBox.style.display = 'none';
+          msg.innerHTML = '';
+          return;
+        }
+
+        // attempt analysis
+        setChecked(false);
+        msg.innerHTML = '<div class="hint">Memeriksa…</div>';
+        const ok = await performAnalysis();
+        if(ok){
+          // success
+          setChecked(true);
+          verified = true;
+          const tk = createToken();
+          tokenInput.value = tk;
+          tokenBox.textContent = 'Token: ' + tk;
+          tokenBox.style.display = 'block';
+          msg.innerHTML = '<div class="hint" style="color:green">Terverifikasi</div>';
         }else{
-          showError('CAPTCHA salah — coba lagi.');
-          input.focus();
+          // require challenge
+          setChecked(false);
+          msg.innerHTML = '<div class="hint">Verifikasi tambahan diperlukan.</div>';
+          openChallenge();
         }
       });
 
-      document.getElementById('clearBtn').addEventListener('click', ()=>{ form.reset(); msg.innerHTML=''; generate(); });
+      // keyboard support
+      box.addEventListener('keydown', (e)=>{
+        if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); box.click(); }
+      });
 
-      function showSuccess(text){ msg.innerHTML = `<div class="success">${text}</div>` }
-      function showError(text){ msg.innerHTML = `<div class="error">${text}</div>` }
+      // check challenge
+      checkBtn.addEventListener('click', ()=>{
+        if(!currentChallenge) return;
+        const val = (challengeInput.value || '').trim();
+        if(!val){ challengeError.textContent = 'Isi jawaban.'; return; }
+        if(val === currentChallenge.answer){
+          // success
+          closeModal();
+          setChecked(true);
+          verified = true;
+          const tk = createToken();
+          tokenInput.value = tk;
+          tokenBox.textContent = 'Token: ' + tk;
+          tokenBox.style.display = 'block';
+          msg.innerHTML = '<div class="hint" style="color:green">Terverifikasi setelah challenge.</div>';
+        }else{
+          challengeError.textContent = 'Jawaban salah. Coba lagi.'; challengeInput.focus();
+        }
+      });
 
-      // initial
-      generate();
+      // close challenge
+      closeChallenge.addEventListener('click', ()=>{
+        closeModal();
+        msg.innerHTML = '<div class="hint">Verifikasi dibatalkan.</div>';
+      });
 
-      // prevent copy of captcha by keyboard selection on canvas (not full-proof)
-      canvas.addEventListener('contextmenu', e=>e.preventDefault());
+      // form submit
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        msg.innerHTML = '';
+        if(!verified || !tokenInput.value){
+          msg.innerHTML = '<div class="error">Harus terverifikasi dulu (centang CAPTCHA).</div>';
+          return;
+        }
+        // Demo: show token and pretend submit
+        msg.innerHTML = '<div class="hint" style="color:green">Form dikirim (demo). Token: ' + tokenInput.value + '</div>';
+        // In production: kirim token ke server untuk validasi server-side
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        setChecked(false);
+        verified = false;
+        tokenInput.value = '';
+        tokenBox.style.display = 'none';
+        msg.innerHTML = '';
+      });
+
+      // close modal on Escape
+      window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
+
     })();
   </script>
 </body>
