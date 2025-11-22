@@ -28,7 +28,8 @@ for argument in CHROME_ARGUMENTS:
 driver = ChromiumPage(addr_or_opts=options)
 recaptchaSolver = RecaptchaSolver(driver)
 
-driver.get("https://www.google.com/recaptcha/api2/demo")  # Perbaiki spasi
+# driver.get("https://www.google.com/recaptcha/api2/demo")  # test
+driver.get("https://antrean.logammulia.com/antrian")
 t0 = time.time()
 
 try:
