@@ -43,11 +43,16 @@ class RecaptchaSolver:
         iframe_inner.wait.ele_displayed(
             ".rc-anchor-content", timeout=self.TIMEOUT_STANDARD
         )
-        iframe_inner(".rc-anchor-content", timeout=self.TIMEOUT_SHORT).click()
+        iframe_inner(".rc-anchor-content").click()
+        # iframe_inner(".rc-anchor-content", timeout=self.TIMEOUT_SHORT).click()
 
         # Check if solved by just clicking
-        if self.is_solved():
-            return
+        # kondisi perulangan
+        for _ in range(20):  
+            if self.is_solved():
+                print("Captcha solved")
+                return
+            time.sleep(0.5)
 
         # Handle audio challenge
         iframe = self.driver("xpath://iframe[contains(@title, 'recaptcha')]")
@@ -110,14 +115,19 @@ class RecaptchaSolver:
     def is_solved(self) -> bool:
         """Check if the captcha has been solved successfully."""
         try:
-            return (
-                "style"
-                in self.driver.ele(
-                    ".recaptcha-checkbox-checkmark", timeout=self.TIMEOUT_SHORT
-                ).attrs
-            )
+            resp = self.driver("#g-recaptcha-response", timeout=self.TIMEOUT_SHORT).value
+            return bool(resp.strip())
         except Exception:
             return False
+        # try:
+        #     return (
+        #         "style"
+        #         in self.driver.ele(
+        #             ".recaptcha-checkbox-checkmark", timeout=self.TIMEOUT_SHORT
+        #         ).attrs
+        #     )
+        # except Exception:
+        #     return False
 
     def is_detected(self) -> bool:
         """Check if the bot has been detected."""

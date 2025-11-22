@@ -20,24 +20,40 @@ CHROME_ARGUMENTS = [
     "--disable-crash-reporter",
     "--no-sandbox"
 ]
- 
+
 options = ChromiumOptions()
 for argument in CHROME_ARGUMENTS:
     options.set_argument(argument)
-    
+
 driver = ChromiumPage(addr_or_opts=options)
 recaptchaSolver = RecaptchaSolver(driver)
 
-driver.get("https://patrickhlauke.github.io/recaptcha/")
-
+driver.get("https://www.google.com/recaptcha/api2/demo")  # Perbaiki spasi
 t0 = time.time()
 
-try: 
+try:
     recaptchaSolver.solveCaptcha()
     print(f"Time to solve the captcha: {time.time()-t0:.2f} seconds")
+
+    # Tunggu hingga token muncul di form field
+    print("Waiting for reCAPTCHA response...")
+    for _ in range(30):
+        resp = driver("#g-recaptcha-response").value
+        if resp.strip():
+            print("Token received!")
+            break
+        time.sleep(0.3)
+    else:
+        raise Exception("Timeout: reCAPTCHA response not populated")
+
 except Exception as e:
     print(f"Failed to solve the captcha: {str(e)}")
+else:
+    # Submit form setelah CAPTCHA benar-benar siap
+    driver.ele("#recaptcha-demo-submit").click()
+    print("Form submitted!")
 
-# driver.ele("#recaptcha-demo-submit").click()
-
+# Jeda waktu sblm broeser ditutup
+time.sleep(10)
+# nutup browser
 driver.close()
