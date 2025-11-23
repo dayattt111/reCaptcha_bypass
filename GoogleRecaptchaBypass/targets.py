@@ -63,6 +63,7 @@ solver = RecaptchaSolver(driver)
 
 # === 1. BUKA HALAMAN LOGIN ===
 print("➡️ Membuka halaman login...")
+# driver.get("http://localhost/emer/bb.html")
 driver.get("https://antrean.logammulia.com/login")
 
 # === 2. LOGIN ===

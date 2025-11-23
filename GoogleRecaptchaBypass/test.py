@@ -35,7 +35,7 @@ recaptchaSolver = RecaptchaSolver(driver)
 
 # === Pilih target ===
 # Ganti URL di sini untuk ganti target
-TARGET_URL = "https://www.google.com/recaptcha/api2/demo"  # ✅ Ganti ke Logam Mulia jika perlu
+TARGET_URL = "https://www.google.com/recaptcha/api2/demo" 
 # TARGET_URL = "https://antrean.logammulia.com/antrian"
 
 print(f"➡️ Membuka: {TARGET_URL}")
