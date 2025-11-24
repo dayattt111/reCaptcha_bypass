@@ -7,7 +7,6 @@ import time
 from typing import Optional
 from DrissionPage import ChromiumPage
 
-
 class RecaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""
 

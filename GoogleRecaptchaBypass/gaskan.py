@@ -2,11 +2,11 @@ from DrissionPage import ChromiumPage, ChromiumOptions
 from RecaptchaSolver import RecaptchaSolver
 import time
 
-URL = "https://antrean.logammulia.com/login"
+URL = "https://antrean.logammulia.com/login"  
 
 USER = {
-    "username": "087794222424",
-    "password": "baduut15"
+    "username": "089603335576",
+    "password": "Golddrive123"
 }
 
 def find_recaptcha_iframe(page):

@@ -23,8 +23,8 @@ from DrissionPage import ChromiumPage, ChromiumOptions
 URL_LOGIN = "https://antrean.logammulia.com/login"
 
 USER = {
-    "username": "085285887793",  # ganti dengan akunmu
-    "password": "baduut15"       # ganti dengan passwordmu
+    "username": "085285887793",  
+    "password": "Golddrive123"       
 }
 
 # Optional: isi proxy list jika ingin rotasi proxy (format: "http://user:pass@host:port" atau "http://host:port")
